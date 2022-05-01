@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>网站名称</title>
+    <meta name="description" content="网站描述" />
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+  </head>
+  <style>
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    [v-cloak] {
+      display: none;
+    }
+    .el-tag {
+      cursor: pointer;
+    }
+    #app {
+      height: 100%;
+      margin: 0 auto;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .title {
+      letter-spacing: 1.2px;
+    }
+    .links {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .link {
+      margin-left: 5px;
+      margin-bottom: 5px;
+      display: block;
+    }
+    main {
+      flex: 1;
+    }
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .category {
+      margin-bottom: 10px;
+    }
+    .project-title {
+      display: flex;
+      justify-content: space-between;
+    }
+    .project-name {
+      line-height: 22px;
+      display: -webkit-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+    }
+    .project-category {
+      margin-left: 5px;
+    }
+    .project-description a {
+      color: #409eff;
+    }
+    .project-description a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      padding: 10px;
+    }
+  </style>
+  <body>
+    <div id="app">
+      <header v-cloak>
+        <h1 class="title">{{config.title}}</h1>
+        <div class="links">
+          <el-link
+            type="info"
+            v-for="link in links"
+            :key="link.href"
+            class="link"
+            :href="link.href"
+            target="_blank"
+          >
+            {{ link.name }}
+          </el-link>
+        </div>
+      </header>
+      <main v-cloak>
+        <section class="categories">
+          <el-button
+            plain
+            size="small"
+            class="category"
+            :type="activeCategory=='全部'?'primary':''"
+            plain
+            @click="showCategory"
+          >
+            全部
+          </el-button>
+          <el-button
+            :type="activeCategory==category?'primary':''"
+            size="small"
+            v-for="category in categories"
+            :key="category"
+            class="category"
+            @click="showCategory"
+            plain
+          >
+            {{ category }}
+          </el-button>
+        </section>
+        <projects :state="showAll" target="project" :targets="projects"></projects>
+        <projects :state="!showAll" target="show" :targets="shows"></projects>
+      </main>
+      <footer v-cloak class="center">{{config.copyright}}</footer>
+    </div>
+    <script src="https://unpkg.com/vue@2"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+      Vue.component("projects", {
+        props: ["state", "target", "targets"],
+        template: `<section v-if="state" class="projects">
+                    <el-collapse accordion>
+                      <el-collapse-item v-for="target in targets" :key="target.name" v-cloak class="project">
+                        <template slot="title" class="project-title">
+                          <span class="project-name">{{target.name}}</span>
+                          <span class="project-categories">
+                            <el-tag
+                              v-for="category in target.categories"
+                              :key="category"
+                              v-cloak
+                              class="project-category"
+                              size="mini"
+                            >
+                              {{ category }}
+                            </el-tag>
+                          </span>
+                        </template>
+                        <div v-html="target.description" class="project-description"></div>
+                      </el-collapse-item>
+                    </el-collapse>
+                  </section>`,
+      });
+      var app = new Vue({
+        el: "#app",
+        data: {
+          // 网站信息
+          config: {
+            title: "XXX的项目集",
+            copyright: "© 2022 XXX",
+          },
+          // 社交链接
+          links: [
+            {
+              href: "https://github.com/coycs",
+              name: "Github",
+            },
+          ],
+          // 项目
+          projects: [
+            {
+              name: "项目名称",
+              description: "项目描述",
+              categories: ["项目分类"],
+            },
+          ],
+          showAll: true,
+          shows: [],
+          activeCategory: "全部",
+        },
+        computed: {
+          // 获取所有项目的所有不重复分类
+          categories: function () {
+            let categories = [];
+            for (let i = 0; i < this.projects.length; i++) {
+              let p = this.projects[i];
+              for (let j = 0; j < p.categories.length; j++) {
+                let c = p.categories[j];
+                if (-categories.indexOf(c)) {
+                  categories.push(c);
+                }
+              }
+            }
+            return categories;
+          },
+          items: function () {
+            return this.projects;
+          },
+        },
+        methods: {
+          // 切换显示分类
+          showCategory: function (e) {
+            let category = e.target.innerText;
+            this.activeCategory = category;
+            if (category == "全部") {
+              this.showAll = true;
+              return;
+            }
+            this.showAll = false;
+            this.shows = [];
+            for (let i = 0; i < this.projects.length; i++) {
+              let p = this.projects[i];
+              for (let j = 0; j < p.categories.length; j++) {
+                if (p.categories[j] == category) {
+                  this.shows.push(p);
+                  break;
+                }
+              }
+            }
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
