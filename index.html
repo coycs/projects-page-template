@@ -204,7 +204,7 @@
               let p = this.projects[i];
               for (let j = 0; j < p.categories.length; j++) {
                 let c = p.categories[j];
-                if (-categories.indexOf(c)) {
+                if (categories.indexOf(c)==-1) {
                   categories.push(c);
                 }
               }
